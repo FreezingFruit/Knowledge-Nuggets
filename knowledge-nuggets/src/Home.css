@@ -7,33 +7,35 @@
 
 /* Global styles */
 body {
-    height: 100%;
-    margin: 0;
-    background: #0c192c;
-    font-family: 'Rubik', sans-serif;
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    overflow: hidden;
+  height: 100vh; /* Full viewport height */
+  margin: 0;
+  background: #dedfe2;
+  font-family: "Rubik", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto; /* Allow scrolling if needed */
+  overflow-x: auto;
 }
 
+/* Main container */
 .container {
-  display: flex; 
+  display: flex;
   flex-direction: column;
-  justify-content: center; 
-  align-items: center; 
-  background: #4d4d4d;
-  font-family: 'Rubik', sans-serif;
-  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+  background: #f8f8f8;
+  font-family: "Rubik", sans-serif;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 1000px;
   padding: 1rem;
   z-index: 1;
-  margin: 0 auto;
+  margin: 50px auto;
 }
 
-
+/* Form container */
 .form-container {
   width: 100%;
   position: relative;
@@ -46,6 +48,7 @@ h1 {
   color: #333;
 }
 
+/* Input and button styling */
 input {
   width: 100%;
   padding: 1rem;
@@ -75,6 +78,7 @@ button:hover {
   background-color: #0056b3;
 }
 
+/* Result styling */
 .result {
   color: black;
   margin-top: 1.5rem;
@@ -91,7 +95,7 @@ button:hover {
   text-decoration: underline;
 }
 
-/* Styling for the summary section */
+/* Summary container */
 .summary-container {
   margin-top: 2rem;
   padding: 1.5rem;
@@ -115,7 +119,77 @@ button:hover {
   margin-bottom: 1rem;
 }
 
-/* Ensure body content takes full height for scrolling */
+/* Center the how-to-container */
+.how-to-container {
+  text-align: center;
+  padding: 2rem;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  max-width: 600px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* Centers content vertically */
+  margin: 3rem auto; /* Centers the section */
+}
+
+.how-to-container h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.how-to-container h2 {
+  font-size: 1.5rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.how-to-container p {
+  font-size: 1.2rem;
+}
+
+/* Individual steps */
+.how-to {
+  background: white;
+  color: black; /* Ensures text is visible */
+  padding: 1rem;
+  margin: 0.5rem 0;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 80%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.how-to:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .how-to-container {
+    padding: 1rem;
+  }
+
+  .how-to-container h1 {
+    font-size: 2rem;
+  }
+
+  .how-to-container h2 {
+    font-size: 1.2rem;
+  }
+
+  .how-to {
+    width: 100%;
+  }
+}
+
+/* Ensure full height */
 html,
 body {
   height: 100%;

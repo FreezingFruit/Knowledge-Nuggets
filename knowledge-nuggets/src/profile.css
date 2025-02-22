@@ -1,0 +1,109 @@
+/* Reset styles to remove unwanted margins */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Global Body Styles */
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #f5f5f5;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+/* Profile Page Container */
+.profile-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  margin-top: 50px;
+}
+
+/* Left Section (Sidebar) */
+.profile-left {
+  position: absolute;
+  margin-top: 60px;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 250px;
+  background-color: #f8f9fa;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-right: 1px solid #ddd;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.profile-left h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.profile-left h3 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.summary-list {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.summary-list li {
+  padding: 0.8rem;
+  margin: 0.5rem 0;
+  background-color: #e9ecef;
+  cursor: pointer;
+  text-align: center;
+  border-radius: 0.3rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.summary-list li:hover {
+  background-color: #ced4da;
+  transform: translateY(-2px);
+}
+
+/* Right Section (Content) */
+.profile-right {
+  margin-left: 250px; /* Pushes content to the right of the sidebar */
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.profile-right h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.profile-right p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profile-left {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .profile-right {
+    margin-left: 0;
+    padding: 1rem;
+  }
+}

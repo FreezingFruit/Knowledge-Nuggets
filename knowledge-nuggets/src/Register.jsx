@@ -1,53 +1,51 @@
-import React from "react";
-import { useRef, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useRef, useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   faCheck,
   faTimes,
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import "./Form.css";
-import Bubbles from "./bubbles";
+import { app, auth, db } from "./firebase/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { ref, set } from "firebase/database";
+import "./Form.css"; // Ensure this includes the new styles
 
-const usernameRegex = /^[a-zA-Z0-9._]{4,20}$/;
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const passwordRegex =
   /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 const Register = () => {
   const userRef = useRef();
   const errRef = useRef();
+  const navigate = useNavigate(); // Initialize useNavigate for navigation
 
   const [user, setUser] = useState("");
-  const [validName, setValidName] = useState("");
-  const [userFocus, setUserFocus] = useState("");
+  const [validName, setValidName] = useState(false);
+  const [userFocus, setUserFocus] = useState(false);
 
   const [pwd, setPwd] = useState("");
-  const [validPwd, setValidPwd] = useState("");
-  const [pwdFocus, setPwdFocus] = useState("");
+  const [validPwd, setValidPwd] = useState(false);
+  const [pwdFocus, setPwdFocus] = useState(false);
 
   const [matchPwd, setMatchPwd] = useState("");
-  const [validMatch, setValidMatch] = useState("");
-  const [matchFocus, setMatchFocus] = useState("");
+  const [validMatch, setValidMatch] = useState(false);
+  const [matchFocus, setMatchFocus] = useState(false);
 
   const [errMsg, setErrMsg] = useState("");
-  const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     userRef.current.focus();
   }, []);
 
   useEffect(() => {
-    const result = usernameRegex.test(user);
-    console.log(result);
-    console.log(user);
+    const result = emailRegex.test(user);
     setValidName(result);
   }, [user]);
 
   useEffect(() => {
     const result = passwordRegex.test(pwd);
-    console.log(result);
-    console.log(pwd);
     setValidPwd(result);
     const match = pwd === matchPwd;
     setValidMatch(match);
@@ -59,32 +57,47 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const v1 = usernameRegex.test(user);
+    const v1 = emailRegex.test(user);
     const v2 = passwordRegex.test(pwd);
     if (!v1 || !v2) {
       setErrMsg("Invalid Entry");
       return;
     }
-    //PS the things above is just security for checking if everything went smoothly
-    //Handle submit is for the submiting of everything, just put ur magic here
-    console.log(user, pwd);
-    setSuccess(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        user,
+        pwd
+      );
+      console.log("User registered: ", userCredential.user);
+
+      // Save user details to Realtime Database
+      await set(ref(db, "users/" + userCredential.user.uid), {
+        email: user,
+        createdAt: new Date().toISOString(),
+      });
+
+      setSuccess(true);
+      navigate("/login"); // Navigate to the login page on success
+    } catch (error) {
+      console.error("Error registering user: ", error);
+      setErrMsg(error.message);
+      errRef.current.focus();
+    }
   };
 
   return (
-    //the Success ternary is just placeholder since wla syang database for checking if nakasign up
-    <>
-
-      <Bubbles />
-
-      {success ? (
-        <section>
-          <h1>Success!</h1>
-          <p>
-            <Link to="/login">Sign In</Link>
-          </p>
-        </section>
-      ) : (
+    <div className="split-screen">
+      <div className="left">
+        <h1>Knowledge Nuggets</h1>
+        <h2>AI Video Summarization Tool for Learning</h2>
+        <br />
+        <p>
+          Knowledge Nuggets uses a customized AI to increase your efficiency in
+          learning
+        </p>
+      </div>
+      <div className="right">
         <section>
           <p
             ref={errRef}
@@ -95,8 +108,8 @@ const Register = () => {
           </p>
           <h1>Register</h1>
           <form onSubmit={handleSubmit}>
-            <label htmlFor="username">
-              Username:
+            <label htmlFor="email">
+              Email:
               <span className={validName ? "valid" : "hide"}>
                 <FontAwesomeIcon icon={faCheck} />
               </span>
@@ -106,7 +119,7 @@ const Register = () => {
             </label>
             <input
               type="text"
-              id="username"
+              id="email"
               ref={userRef}
               autoComplete="off"
               onChange={(e) => setUser(e.target.value)}
@@ -123,9 +136,7 @@ const Register = () => {
               }
             >
               <FontAwesomeIcon icon={faInfoCircle} />
-              4 to 24 characters. <br />
-              Must begin with a letter. <br />
-              Letters, numbers, underscores, hyphens allowed.
+              Invalid Email Format.
             </p>
 
             <label htmlFor="password">
@@ -200,24 +211,21 @@ const Register = () => {
               Must match the first password input field.
             </p>
 
-            <button
-              disabled={!validName || !validPwd || !validMatch ? true : false}
-            >
+            <button disabled={!validName || !validPwd || !validMatch}>
               Sign Up
             </button>
           </form>
 
-          <p>
+          <p className="already-registered">
             Already registered?
             <br />
-            <span className="line">
-              {/*put router link here*/}
-              <Link to="/login">Sign In</Link>
-            </span>
+            <Link to="/login" className="sign-in-link">
+              Sign In
+            </Link>
           </p>
         </section>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 

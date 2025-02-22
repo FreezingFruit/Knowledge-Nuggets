@@ -1,37 +1,71 @@
+/* Navbar.css */
+body {
+  margin: 0; /* Remove default body margin to ensure the navbar aligns properly */
+  padding-top: 4rem; /* Add padding equal to the navbar height to prevent content from being hidden underneath */
+  font-family: "Arial", sans-serif; /* Set a clean font for the body */
+}
+
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  color: white;
+  background-color: #f8f9fa; /* Light background color for the navbar */
+  color: #212529; /* Dark color for the text */
   width: 100%; /* Make the navbar span the entire width */
   position: fixed; /* Keep the navbar at the top */
   top: 0;
   left: 0;
   z-index: 1000; /* Ensure the navbar is above other elements */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle shadow for depth */
 }
 
-.navbar-title h1 {
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%; /* Ensure the container spans the entire width */
+}
+
+.navbar-logo {
   margin: 0;
   font-size: 1.5rem;
-  color: #007bff;
+  color: #007bff; /* Blue color for the title */
+  text-decoration: none;
 }
 
-.navbar-links .sign-in-button {
+.navbar-logo:hover {
+  color: #0056b3; /* Darker blue on hover */
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-link {
+  margin-right: 1rem;
+  font-size: 1rem;
+  color: #007bff; /* Blue color for the link */
+  text-decoration: none;
+}
+
+.navbar-link:hover {
+  color: #0056b3;
+}
+
+.logout-button {
   padding: 0.5rem 1rem;
   background-color: #007bff;
   color: white;
   text-decoration: none;
+  border: none;
   border-radius: 0.5rem;
   font-size: 1rem;
+  cursor: pointer;
   transition: background-color 0.3s;
 }
 
-.navbar-links .sign-in-button:hover {
+.logout-button:hover {
   background-color: #0056b3;
-}
-
-body {
-  margin: 0; /* Remove default body margin to ensure the navbar aligns properly */
-  padding-top: 4rem; /* Add padding equal to the navbar height to prevent content from being hidden underneath */
 }
