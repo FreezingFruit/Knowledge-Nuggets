@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from test_analyzer import VideoAnalysisBot
+from test_analyzer import OptimizedVideoBot
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,13 +23,16 @@ class VideoRequest(BaseModel):
 @app.post("/analyze-video")
 async def analyze_video(request: VideoRequest):
     try:
-        bot = VideoAnalysisBot()
+        bot = OptimizedVideoBot(sample_rate=1)  
         bot.process_video(request.video_url, is_youtube_url=True)
-        result = bot.generate_summary()
-        return result
+        summary = bot.generate_summary()
+        interpreted_summary = bot.generate_interpreted_summary()
+        bot.cleanup()  
+        return interpreted_summary
     except Exception as e:
+        bot.cleanup()  
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
