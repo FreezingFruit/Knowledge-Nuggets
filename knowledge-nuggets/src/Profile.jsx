@@ -102,11 +102,6 @@ const Profile = () => {
                 <h3>Narrative Summary</h3>
                 <p>{selectedSummary.content}</p>
                 <h3>Visual Elements</h3>
-                <ul>
-                  {selectedSummary.visualElements?.map((element, index) => (
-                    <li key={index}>{element}</li>
-                  ))}
-                </ul>
               </div>
             </>
           ) : (

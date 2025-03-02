@@ -4,10 +4,10 @@ import "./Home.css";
 import Navbar from "./Navbar";
 import { auth } from "./firebase/firebase";
 import { saveSummaryToDB } from "./firebase/firebaseHelpers";
-import { FaFilePdf, FaFileWord, FaFileAlt } from 'react-icons/fa';
+import { FaFilePdf, FaFileWord, FaFileAlt } from "react-icons/fa";
 
 // Define a consistent API base URL
-const API_BASE_URL = "http://localhost:8000";  // Use localhost or your server IP
+const API_BASE_URL = "http://localhost:8000"; // Use localhost or your server IP
 
 const Home = () => {
   const [url, setUrl] = useState("");
@@ -22,7 +22,7 @@ const Home = () => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [showAdditionalContent, setShowAdditionalContent] = useState(false);
   const [summaryLength, setSummaryLength] = useState("medium"); // Options: "short", "medium", "long"
-  
+
   // New state variables for queue system
   const [taskId, setTaskId] = useState(null);
   const [taskStatus, setTaskStatus] = useState(null);
@@ -39,25 +39,26 @@ const Home = () => {
     { name: "Jacques Hale", img: "assets/Jacques.jpg" },
   ];
 
-  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=)|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/live\/|youtube\.com\/playlist\?list=)([^#&?]*).*/;
+  const youtubeRegex =
+    /^(https?:\/\/)?(www\.)?(youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=)|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/live\/|youtube\.com\/playlist\?list=)([^#&?]*).*/;
 
   const modifySummaryLength = (text, length) => {
     if (!text) return "";
-    
+
     // Approximate word counts for different lengths
     const wordCounts = {
       short: 50,
       medium: 150, // Default from API
-      long: 300
+      long: 300,
     };
-    
+
     const words = text.split(/\s+/);
     const targetCount = wordCounts[length];
-    
+
     if (length === "short" && words.length > targetCount) {
       return text;
     } else if (length === "long" && words.length < targetCount) {
-      return text; 
+      return text;
     } else {
       return text;
     }
@@ -67,7 +68,7 @@ const Home = () => {
   const fetchQueueStatus = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/queue-status`);
-      
+
       if (response.ok) {
         const data = await response.json();
         setQueueStatus(data);
@@ -83,14 +84,14 @@ const Home = () => {
     if (pollingInterval) {
       clearInterval(pollingInterval);
     }
-    
+
     // Set up new polling interval
     const interval = setInterval(() => {
       pollTaskStatus(taskId);
     }, 3000); // Poll every 3 seconds
-    
+
     setPollingInterval(interval);
-    
+
     // Initial poll
     pollTaskStatus(taskId);
   };
@@ -98,36 +99,36 @@ const Home = () => {
   const pollTaskStatus = async (taskId) => {
     try {
       const response = await fetch(`${API_BASE_URL}/task-status/${taskId}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to get task status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setTaskStatus(data.status);
-      
+
       // Update queue position if task is queued
       if (data.status === "queued" && data.position !== undefined) {
         setQueuePosition(data.position);
       } else {
         setQueuePosition(null);
       }
-      
+
       // Update progress information if available
       if (data.progress) {
         setProgress(data.progress * 100);
       }
-      
+
       // If task is complete, fetch the results
       if (data.status === "completed") {
         clearInterval(pollingInterval);
         setPollingInterval(null);
-        
+
         // If result is included directly in status response
         if (data.result) {
           setSummaryData(data.result);
           setLoading(false);
-          
+
           // Save to Firebase if user is logged in
           if (auth.currentUser) {
             await saveSummaryToDB(auth.currentUser.uid, {
@@ -139,14 +140,16 @@ const Home = () => {
               timestamp: new Date().toISOString(),
             });
           }
-        } 
+        }
         // Otherwise fetch results from dedicated endpoint
         else {
-          const resultResponse = await fetch(`${API_BASE_URL}/results/${taskId}`);
+          const resultResponse = await fetch(
+            `${API_BASE_URL}/results/${taskId}`
+          );
           if (resultResponse.ok) {
             const resultData = await resultResponse.json();
             setSummaryData(resultData);
-            
+
             // Save to Firebase if user is logged in
             if (auth.currentUser) {
               await saveSummaryToDB(auth.currentUser.uid, {
@@ -161,13 +164,13 @@ const Home = () => {
           }
           setLoading(false);
         }
-      } 
+      }
       // If task failed, show error
       else if (data.status === "failed") {
         clearInterval(pollingInterval);
         setPollingInterval(null);
         setLoading(false);
-        
+
         if (data.error) {
           if (activeOption === "url") {
             setUrlError(`Analysis failed: ${data.error}`);
@@ -187,7 +190,7 @@ const Home = () => {
         clearInterval(pollingInterval);
         setPollingInterval(null);
         setLoading(false);
-        
+
         if (activeOption === "url") {
           setUrlError("Analysis was canceled.");
         } else {
@@ -202,14 +205,14 @@ const Home = () => {
   // Periodic queue status polling when in queue
   useEffect(() => {
     let statusInterval = null;
-    
+
     if (loading && taskStatus === "queued") {
       // Fetch queue status every 5 seconds when in queue
       statusInterval = setInterval(fetchQueueStatus, 5000);
       // Initial fetch
       fetchQueueStatus();
     }
-    
+
     return () => {
       if (statusInterval) {
         clearInterval(statusInterval);
@@ -229,17 +232,17 @@ const Home = () => {
   // Cancel analysis function
   const cancelAnalysis = async () => {
     if (!taskId) return;
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/cancel-task/${taskId}`, {
-        method: "POST"
+        method: "POST",
       });
-      
+
       if (response.ok) {
         clearInterval(pollingInterval);
         setPollingInterval(null);
         setLoading(false);
-        
+
         if (activeOption === "url") {
           setUrlError("Analysis canceled.");
         } else {
@@ -272,11 +275,11 @@ const Home = () => {
       const response = await fetch(`${API_BASE_URL}/analyze-video`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json", 
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           video_url: url,
-          summary_length: summaryLength 
+          summary_length: summaryLength,
         }),
       });
 
@@ -287,16 +290,18 @@ const Home = () => {
       const data = await response.json();
       setTaskId(data.task_id);
       setTaskStatus(data.status);
-      
+
       if (data.position !== undefined) {
         setQueuePosition(data.position);
       }
-      
+
       // Start polling for task status
       startPolling(data.task_id);
     } catch (error) {
       console.error("Error:", error);
-      setUrlError(`Connection error: ${error.message}. Please check server connection.`);
+      setUrlError(
+        `Connection error: ${error.message}. Please check server connection.`
+      );
       setLoading(false);
     }
   };
@@ -306,11 +311,11 @@ const Home = () => {
     if (selectedFile && selectedFile.type.startsWith("video/")) {
       setFile(selectedFile);
       setFileError("");
-      
+
       // Create URL for preview
       const objectUrl = URL.createObjectURL(selectedFile);
       setVideoUrl(objectUrl);
-      
+
       console.log("Video file selected:", selectedFile.name);
     } else {
       setFile(null);
@@ -322,12 +327,12 @@ const Home = () => {
 
   const handleFileUpload = async (event) => {
     event.preventDefault();
-    
+
     if (!file) {
       setFileError("No file selected. Please select a video file.");
       return;
     }
-    
+
     setLoading(true);
     setSummaryData(null);
     setFileError("");
@@ -335,106 +340,123 @@ const Home = () => {
     setTaskStatus(null);
     setProgress(0);
     setQueuePosition(null);
-    
+
     try {
       // First, upload the file to the server
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('summary_length', summaryLength);
-      
+      formData.append("file", file);
+      formData.append("summary_length", summaryLength);
+
       const uploadResponse = await fetch(`${API_BASE_URL}/upload-video`, {
         method: "POST",
         body: formData,
       });
-  
+
       if (!uploadResponse.ok) {
         throw new Error(`Upload failed: ${uploadResponse.status}`);
       }
-      
+
       const uploadResult = await uploadResponse.json();
-      
+
       // Now analyze the uploaded file
-      const analysisResponse = await fetch(`${API_BASE_URL}/analyze-local-video`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          file_path: uploadResult.file_path,
-          summary_length: uploadResult.summary_length
-        }),
-      });
-  
+      const analysisResponse = await fetch(
+        `${API_BASE_URL}/analyze-local-video`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            file_path: uploadResult.file_path,
+            summary_length: uploadResult.summary_length,
+          }),
+        }
+      );
+
       if (!analysisResponse.ok) {
         throw new Error(`Analysis failed: ${analysisResponse.status}`);
       }
-      
+
       const data = await analysisResponse.json();
       setTaskId(data.task_id);
       setTaskStatus(data.status);
-      
+
       if (data.position !== undefined) {
         setQueuePosition(data.position);
       }
-      
+
       // Start polling for task status
       startPolling(data.task_id);
     } catch (error) {
       console.error("Error:", error);
-      setFileError(`Connection error: ${error.message}. Please check server connection.`);
+      setFileError(
+        `Connection error: ${error.message}. Please check server connection.`
+      );
       setLoading(false);
     }
   };
 
   const downloadSummary = (format) => {
     if (!summaryData) return;
-    
-    let content = '';
+
+    let content = "";
     let filename = `video-summary-${new Date().toISOString().slice(0, 10)}`;
-    let mime = '';
-    
+    let mime = "";
+
     // Create content based on format
-    if (format === 'txt') {
+    if (format === "txt") {
       content = `VIDEO SUMMARY\n\n`;
       content += `Content Type: ${summaryData.content_type}\n`;
-      content += `Confidence: ${(summaryData.type_confidence * 100).toFixed(2)}%\n\n`;
-      
-      if (summaryData.additional_types && summaryData.additional_types.length > 0) {
+      content += `Confidence: ${(summaryData.type_confidence * 100).toFixed(
+        2
+      )}%\n\n`;
+
+      if (
+        summaryData.additional_types &&
+        summaryData.additional_types.length > 0
+      ) {
         content += `ADDITIONAL CATEGORIES:\n`;
-        summaryData.additional_types.forEach(type => {
+        summaryData.additional_types.forEach((type) => {
           content += `- ${type.label} (${(type.score * 100).toFixed(2)}%)\n`;
         });
-        content += '\n';
+        content += "\n";
       }
-      
+
       content += `SUMMARY:\n${summaryData.narrative}\n\n`;
-      
+
       // Always include visual elements
-      if (summaryData.main_visual_elements && summaryData.main_visual_elements.length > 0) {
+      if (
+        summaryData.main_visual_elements &&
+        summaryData.main_visual_elements.length > 0
+      ) {
         content += `VISUAL ELEMENTS:\n`;
-        summaryData.main_visual_elements.forEach(element => {
+        summaryData.main_visual_elements.forEach((element) => {
           content += `- ${element}\n`;
         });
-        content += '\n';
+        content += "\n";
       }
-      
+
       // Always include transcriptions if available
       if (summaryData.transcriptions) {
-        if (summaryData.transcriptions.audio_transcription && 
-            summaryData.transcriptions.audio_transcription !== "[No audio found]") {
+        if (
+          summaryData.transcriptions.audio_transcription &&
+          summaryData.transcriptions.audio_transcription !== "[No audio found]"
+        ) {
           content += `AUDIO TRANSCRIPTION:\n${summaryData.transcriptions.audio_transcription}\n\n`;
         }
-        
-        if (summaryData.transcriptions.youtube_captions && 
-            summaryData.transcriptions.youtube_captions !== "[No captions available]") {
+
+        if (
+          summaryData.transcriptions.youtube_captions &&
+          summaryData.transcriptions.youtube_captions !==
+            "[No captions available]"
+        ) {
           content += `YOUTUBE CAPTIONS:\n${summaryData.transcriptions.youtube_captions}\n\n`;
         }
       }
-      
-      filename += '.txt';
-      mime = 'text/plain';
-    } 
-    else if (format === 'docx' || format === 'pdf') {
+
+      filename += ".txt";
+      mime = "text/plain";
+    } else if (format === "docx" || format === "pdf") {
       // For simplicity, we'll use a basic HTML representation that can be opened in Word
       content = `<html>
         <head>
@@ -459,46 +481,62 @@ const Home = () => {
         <body>
           <h1>VIDEO SUMMARY</h1>
           <p><strong>Content Type:</strong> ${summaryData.content_type}</p>
-          <p><strong>Confidence:</strong> ${(summaryData.type_confidence * 100).toFixed(2)}%</p>
+          <p><strong>Confidence:</strong> ${(
+            summaryData.type_confidence * 100
+          ).toFixed(2)}%</p>
           
-          ${summaryData.additional_types && summaryData.additional_types.length > 0 ? `
+          ${
+            summaryData.additional_types &&
+            summaryData.additional_types.length > 0
+              ? `
           <h2>Additional Categories:</h2>
           <ul>
-            ${summaryData.additional_types.map(type => 
-              `<li>${type.label} (${(type.score * 100).toFixed(2)}%)</li>`).join('')}
-          </ul>` : ''}
+            ${summaryData.additional_types
+              .map(
+                (type) =>
+                  `<li>${type.label} (${(type.score * 100).toFixed(2)}%)</li>`
+              )
+              .join("")}
+          </ul>`
+              : ""
+          }
           
           <h2>SUMMARY:</h2>
           <p>${summaryData.narrative}</p>
           
-          ${summaryData.main_visual_elements && summaryData.main_visual_elements.length > 0 ? `
-          <h2>Visual Elements:</h2>
-          <ul>
-            ${summaryData.main_visual_elements.map(element => 
-              `<li>${element}</li>`).join('')}
-          </ul>` : ''}
-          
-          ${summaryData.transcriptions && summaryData.transcriptions.audio_transcription && 
-            summaryData.transcriptions.audio_transcription !== "[No audio found]" ? `
+          ${
+            summaryData.transcriptions &&
+            summaryData.transcriptions.audio_transcription &&
+            summaryData.transcriptions.audio_transcription !==
+              "[No audio found]"
+              ? `
             <h2>Audio Transcription:</h2>
             <div class="transcription">${summaryData.transcriptions.audio_transcription}</div>
-          ` : ''}
+          `
+              : ""
+          }
           
-          ${summaryData.transcriptions && summaryData.transcriptions.youtube_captions && 
-            summaryData.transcriptions.youtube_captions !== "[No captions available]" ? `
+          ${
+            summaryData.transcriptions &&
+            summaryData.transcriptions.youtube_captions &&
+            summaryData.transcriptions.youtube_captions !==
+              "[No captions available]"
+              ? `
             <h2>YouTube Captions:</h2>
             <div class="transcription">${summaryData.transcriptions.youtube_captions}</div>
-          ` : ''}
+          `
+              : ""
+          }
         </body>
       </html>`;
-      
-      filename += format === 'docx' ? '.html' : '.html'; // User can open this in Word or as PDF
-      mime = 'text/html';
+
+      filename += format === "docx" ? ".html" : ".html"; // User can open this in Word or as PDF
+      mime = "text/html";
     }
-    
+
     // Create blob and download
     const blob = new Blob([content], { type: mime });
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = filename;
     document.body.appendChild(link);
@@ -544,23 +582,29 @@ const Home = () => {
               <div className="summary-length-selector">
                 <label>Summary Length:</label>
                 <div className="summary-length-controls">
-                  <button 
+                  <button
                     type="button"
-                    className={`length-btn ${summaryLength === "short" ? "active" : ""}`}
+                    className={`length-btn ${
+                      summaryLength === "short" ? "active" : ""
+                    }`}
                     onClick={() => setSummaryLength("short")}
                   >
                     Short
                   </button>
-                  <button 
+                  <button
                     type="button"
-                    className={`length-btn ${summaryLength === "medium" ? "active" : ""}`}
+                    className={`length-btn ${
+                      summaryLength === "medium" ? "active" : ""
+                    }`}
                     onClick={() => setSummaryLength("medium")}
                   >
                     Medium
                   </button>
-                  <button 
+                  <button
                     type="button"
-                    className={`length-btn ${summaryLength === "long" ? "active" : ""}`}
+                    className={`length-btn ${
+                      summaryLength === "long" ? "active" : ""
+                    }`}
                     onClick={() => setSummaryLength("long")}
                   >
                     Long
@@ -592,35 +636,50 @@ const Home = () => {
                   <span className="browse-button">Browse file</span>
                   {file && <p className="selected-file-name">{file.name}</p>}
                 </div>
-                <input type="file" id="file" accept="video/*" onChange={handleFileChange} />
+                <input
+                  type="file"
+                  id="file"
+                  accept="video/*"
+                  onChange={handleFileChange}
+                />
               </label>
               <div className="summary-length-selector">
                 <label>Summary Length:</label>
                 <div className="summary-length-controls">
-                  <button 
+                  <button
                     type="button"
-                    className={`length-btn ${summaryLength === "short" ? "active" : ""}`}
+                    className={`length-btn ${
+                      summaryLength === "short" ? "active" : ""
+                    }`}
                     onClick={() => setSummaryLength("short")}
                   >
                     Short
                   </button>
-                  <button 
+                  <button
                     type="button"
-                    className={`length-btn ${summaryLength === "medium" ? "active" : ""}`}
+                    className={`length-btn ${
+                      summaryLength === "medium" ? "active" : ""
+                    }`}
                     onClick={() => setSummaryLength("medium")}
                   >
                     Medium
                   </button>
-                  <button 
+                  <button
                     type="button"
-                    className={`length-btn ${summaryLength === "long" ? "active" : ""}`}
+                    className={`length-btn ${
+                      summaryLength === "long" ? "active" : ""
+                    }`}
                     onClick={() => setSummaryLength("long")}
                   >
                     Long
                   </button>
                 </div>
               </div>
-              <button type="submit" className="submit-button" disabled={loading}>
+              <button
+                type="submit"
+                className="submit-button"
+                disabled={loading}
+              >
                 {loading ? (
                   <>
                     <span className="loading-spinner"></span>
@@ -638,11 +697,11 @@ const Home = () => {
         {videoUrl && (
           <div className="video-preview-container">
             <h3>Video Preview</h3>
-            <video 
-              className="video-preview" 
-              src={videoUrl} 
-              controls 
-              width="100%" 
+            <video
+              className="video-preview"
+              src={videoUrl}
+              controls
+              width="100%"
               height="auto"
             />
           </div>
@@ -650,16 +709,19 @@ const Home = () => {
 
         {loading && (
           <div className="summary-container">
-            <h2>Video Analysis {taskStatus === "processing" ? "In Progress" : "Queued"}</h2>
-            
+            <h2>
+              Video Analysis{" "}
+              {taskStatus === "processing" ? "In Progress" : "Queued"}
+            </h2>
+
             {taskStatus === "queued" && (
               <>
                 <p>Your video is in the processing queue.</p>
                 {queuePosition !== null && (
                   <div className="queue-position">
                     <p>
-                      {queuePosition === 0 
-                        ? "Your video is next in line." 
+                      {queuePosition === 0
+                        ? "Your video is next in line."
                         : `Position in queue: ${queuePosition + 1}`}
                     </p>
                   </div>
@@ -668,32 +730,41 @@ const Home = () => {
                   <div className="queue-info">
                     <p>Total videos in queue: {queueStatus.queue_length}</p>
                     {queueStatus.active_task && (
-                      <p>Currently processing: {queueStatus.active_task.progress 
-                        ? `${Math.round(queueStatus.active_task.progress * 100)}% complete` 
-                        : "just started"}
+                      <p>
+                        Currently processing:{" "}
+                        {queueStatus.active_task.progress
+                          ? `${Math.round(
+                              queueStatus.active_task.progress * 100
+                            )}% complete`
+                          : "just started"}
                       </p>
                     )}
                   </div>
                 )}
               </>
             )}
-            
+
             {taskStatus === "processing" && (
               <>
-                <p>Processing your video. This may take a few minutes depending on the video length.</p>
+                <p>
+                  Processing your video. This may take a few minutes depending
+                  on the video length.
+                </p>
                 {progress > 0 && (
                   <div className="progress-container">
-                    <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-                    <span className="progress-text">{Math.round(progress)}%</span>
+                    <div
+                      className="progress-bar"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                    <span className="progress-text">
+                      {Math.round(progress)}%
+                    </span>
                   </div>
                 )}
               </>
             )}
-            
-            <button 
-              className="cancel-btn" 
-              onClick={cancelAnalysis}
-            >
+
+            <button className="cancel-btn" onClick={cancelAnalysis}>
               Cancel Analysis
             </button>
           </div>
@@ -731,71 +802,76 @@ const Home = () => {
             </div>
 
             <div className="show-more-container">
-              <button 
+              <button
                 className="show-more-btn"
                 onClick={() => setShowAdditionalContent(!showAdditionalContent)}
               >
-                {showAdditionalContent ? 'Show Less' : 'Show More Details'}
+                {showAdditionalContent ? "Show Less" : "Show More Details"}
               </button>
             </div>
-            
+
             {showAdditionalContent && (
               <div className="additional-content">
                 {/* Visual Content Analysis */}
-                {summaryData.main_visual_elements && summaryData.main_visual_elements.length > 0 && (
-                  <div className="summary-section">
-                    <h3>Visual Content Analysis</h3>
-                    <ul>
-                      {summaryData.main_visual_elements.map((element, index) => (
-                        <li key={index}>{element}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
+                {summaryData.main_visual_elements &&
+                  summaryData.main_visual_elements.length > 0 && (
+                    <div className="summary-section">
+                      <h3>Visual Content Analysis</h3>
+                      <ul>
+                        {summaryData.main_visual_elements.map(
+                          (element, index) => (
+                            <li key={index}>{element}</li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
                 {/* Audio Transcription */}
-                {summaryData.transcriptions && summaryData.transcriptions.audio_transcription && (
-                  <div className="summary-section">
-                    <h3>Audio Transcription</h3>
-                    <div className="transcription-box">
-                      {summaryData.transcriptions.audio_transcription}
+                {summaryData.transcriptions &&
+                  summaryData.transcriptions.audio_transcription && (
+                    <div className="summary-section">
+                      <h3>Audio Transcription</h3>
+                      <div className="transcription-box">
+                        {summaryData.transcriptions.audio_transcription}
+                      </div>
                     </div>
-                  </div>
-                )}
-                
+                  )}
+
                 {/* YouTube Captions */}
-                {summaryData.transcriptions && summaryData.transcriptions.youtube_captions && (
-                  <div className="summary-section">
-                    <h3>YouTube Captions</h3>
-                    <div className="transcription-box">
-                      {summaryData.transcriptions.youtube_captions}
+                {summaryData.transcriptions &&
+                  summaryData.transcriptions.youtube_captions && (
+                    <div className="summary-section">
+                      <h3>YouTube Captions</h3>
+                      <div className="transcription-box">
+                        {summaryData.transcriptions.youtube_captions}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             )}
-            
+
             {/* Download buttons section */}
             <div className="download-options">
               <h3>Download Summary</h3>
               <div className="download-buttons">
-                <button 
-                  className="download-btn" 
-                  onClick={() => downloadSummary('txt')}
+                <button
+                  className="download-btn"
+                  onClick={() => downloadSummary("txt")}
                   aria-label="Download as Text"
                 >
                   <FaFileAlt /> TXT
                 </button>
-                <button 
-                  className="download-btn" 
-                  onClick={() => downloadSummary('docx')}
+                <button
+                  className="download-btn"
+                  onClick={() => downloadSummary("docx")}
                   aria-label="Download as Word Document"
                 >
                   <FaFileWord /> DOCX
                 </button>
-                <button 
-                  className="download-btn" 
-                  onClick={() => downloadSummary('pdf')}
+                <button
+                  className="download-btn"
+                  onClick={() => downloadSummary("pdf")}
                   aria-label="Download as PDF"
                 >
                   <FaFilePdf /> PDF
